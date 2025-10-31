@@ -1,11 +1,14 @@
 float[][] cellVelX = new float[50][50];
 float[][] cellVelY = new float[50][50];
-
 float[][] cellVelXNext = new float[50][50];
 float[][] cellVelYNext = new float[50][50];
 
-int lineSegmentPosX,lineSegmentPosY;
+float[][] cellDensX = new float[50][50];
+float[][] cellDensY = new float[50][50];
+float[][] cellDensXNext = new float[50][50];
+float[][] cellDensYNext = new float[50][50];
 
+int lineSegmentPosX,lineSegmentPosY;
 float sumNeighborX, sumNeighborY;
 int fluidSourceX, fluidSourceY;
 
@@ -15,16 +18,32 @@ void setup()
 {
   size(500,500);
   pixelDensity(1);
-  strokeWeight(2);
+  noStroke();
   noSmooth();
 }
 void draw()
 {
   scale(10);
-  noStroke();
+  
+  mouse2Vel();
+  
+  clearNext();
+  diffusion();
+  velNext2vel();
+  
+  clearNext();
+  advection();
+  velNext2vel();
+  
+  clearNext();
+  decay();
+  velNext2vel();
 
-  //mouseVel für cellVel, für jeden pixel zwischen pmouse & mouse
-  //-------------------------------------------------------------
+  drawLoop();
+}
+
+void mouse2Vel()
+{
   for (int i = 0; i<=dist(pmouseX,pmouseY,mouseX,mouseY); i++)
   {
     //loopen für jeden punkt zwischen pmouse & mouse
@@ -38,8 +57,22 @@ void draw()
     //gerundete werte printen auf debug digga
     println("velXY: "+round(cellVelX[mouseX/10][mouseY/10])+","+round(cellVelY[mouseX/10][mouseY/10]));
   }
-  
-  //cellvelnext clearen
+}
+
+void velNext2vel()
+{
+  for (int h=0;h<50;h++)
+  {
+    for (int w=0;w<50;w++)
+    {
+      cellVelX[w][h]=cellVelXNext[w][h];
+      cellVelY[w][h]=cellVelYNext[w][h];
+    }
+  }
+}
+
+void clearNext()
+{
   for (int h=0;h<50;h++)
   {
     for (int w=0;w<50;w++)
@@ -48,15 +81,14 @@ void draw()
       cellVelYNext[w][h]=0;
     }
   }
-  
-  //algorithmus, cellvel=>cellvelnext
-  //---------------------------------
+}
+
+void diffusion()
+{
   for (int h=0;h<50;h++)
   {
     for (int w=0;w<50;w++)
     {
-        //velocity diffusion
-        //------------------
         //über 3x3 loopen für jede cell
         sumNeighborX=0;
         sumNeighborY=0;
@@ -75,53 +107,37 @@ void draw()
         cellVelYNext[w][h]=(0.5*cellVelY[w][h]+0.5*sumNeighborY/9);
     }
   }
-  
-  //werte von cellvelnext in cellvel einsetzen
+}
+
+void advection()
+{
   for (int h=0;h<50;h++)
   {
     for (int w=0;w<50;w++)
     {
-      cellVelX[w][h]=cellVelXNext[w][h];
-      cellVelY[w][h]=cellVelYNext[w][h];
-    }
-  }
-  
-  //cellvelnext clearen
-  for (int h=0;h<50;h++)
-  {
-    for (int w=0;w<50;w++)
-    {
-      cellVelXNext[w][h]=0;
-      cellVelYNext[w][h]=0;
-    }
-  }
-  
-  for (int h=0;h<50;h++)
-  {
-    for (int w=0;w<50;w++)
-    {
-        //bewegung+decay
-        //--------
         fluidSourceX= constrain(round(w-cellVelX[w][h]),0,49);
         fluidSourceY= constrain(round(h-cellVelY[w][h]),0,49);
 
-        cellVelXNext[w][h]=cellVelX[fluidSourceX][fluidSourceY]*fluidDecay;
-        cellVelYNext[w][h]=cellVelY[fluidSourceX][fluidSourceY]*fluidDecay;
+        cellVelXNext[w][h]=cellVelX[fluidSourceX][fluidSourceY];
+        cellVelYNext[w][h]=cellVelY[fluidSourceX][fluidSourceY];
     }
   }
-  
-  //werte von cellvelnext in cellvel einsetzen
+}
+
+void decay()
+{
   for (int h=0;h<50;h++)
   {
     for (int w=0;w<50;w++)
     {
-      cellVelX[w][h]=cellVelXNext[w][h];
-      cellVelY[w][h]=cellVelYNext[w][h];
+        cellVelXNext[w][h]=cellVelX[w][h]*fluidDecay;
+        cellVelYNext[w][h]=cellVelY[w][h]*fluidDecay;
     }
   }
-  
-  //pixel drawen
-  //------------
+}
+
+void drawLoop()
+{
   for (int h=0;h<50;h++)
   {
     for (int w=0;w<50;w++)
@@ -130,9 +146,4 @@ void draw()
       rect(w,h,1,1);
     }
   }
-
-  //außenrand der nich geht wegen out of bounds gefahr + infotext
-  noFill();
-  stroke(0);
-  rect(0, 0, 50, 50);
 }
