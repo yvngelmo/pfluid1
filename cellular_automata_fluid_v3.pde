@@ -26,6 +26,9 @@ void draw()
   scale(10);
   
   mouse2Vel();
+  
+  cellVelY[25][0]=10;
+  cellVelY[25][49]=-10;
 
   velClearNext();
   velDiffusion();
@@ -73,6 +76,7 @@ void mouse2Vel()
     {
       return;
     }
+    
     //loopen für jeden punkt zwischen pmouse & mouse
     lineSegmentPosX= round(lerp(pmouseX, mouseX, i/dist(mouseX,mouseY,pmouseX,pmouseY)))/10;
     lineSegmentPosY= round(lerp(pmouseY, mouseY, i/dist(mouseX,mouseY,pmouseX,pmouseY)))/10;
